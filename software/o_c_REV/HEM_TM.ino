@@ -27,7 +27,7 @@ public:
 
     void Controller() {
         if (Clock(0)) {
-            AdvanceRegister(p);
+            AdvanceRegister(p * cursor); // If cursor is at length, do not change bits
             if (++step == length) {
                 // Advance back to the beginning without changing the register
                 for (int s = step; s < 16; s++) AdvanceRegister(0);
@@ -60,9 +60,11 @@ public:
     }
 
     void OnEncoderMove(int direction) {
-        if (cursor == 0) p = constrain(p += direction, 0, 100);
-        else length = constrain(length += direction, 1, 16);
-        step = 0;
+        if (cursor == 1) p = constrain(p += direction, 0, 100);
+        else {
+            length = constrain(length += direction, 1, 16);
+            step = 0;
+        }
     }
         
     /* Each applet may save up to 32 bits of data. When data is requested from
@@ -105,17 +107,22 @@ private:
     uint16_t reg; // 16-bit sequence register
     int p; // Probability of bit 15 changing on each cycle
     int length; // Sequence length
-    int cursor;  // 0 = p, 1 = length
+    int cursor;  // 0 = length, 1 = p
     int step; // Step advance; for keeping track of the register when the legnth < 16
     braids::Quantizer quantizer;
 
     void DrawSelector() {
-        gfxPrint(1, 15, "p=");
-        gfxPrint(p);
-        gfxPrint(32, 15, "L=");
-        gfxPrint(length);
-        if (cursor == 0) gfxCursor(1, 23, 30);
-        else gfxCursor(32, 23, 30);
+        const uint8_t note[8] = {0xc0, 0xe0, 0xe0, 0xe0, 0x7f, 0x02, 0x14, 0x08};
+        gfxBitmap(1, 14, 8, note);
+        gfxPrint(12, 15, length);
+        gfxPrint(32, 15, "p=");
+        if (cursor == 1) {
+            gfxCursor(32, 23, 30);
+            gfxPrint(p);
+        } else {
+            gfxCursor(1, 23, 30);
+            gfxPrint(" -");
+        }
     }
 
     void DrawIndicator() {
