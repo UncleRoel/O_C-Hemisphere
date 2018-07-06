@@ -98,11 +98,7 @@ public:
 
     void BaseScreensaverView() {
         screensaver_on = 1;
-        if (OC::CORE::ticks - last_view_tick < HEMISPHERE_SCREEN_BLANK_TICKS) {
-            // If help is active, keep the help screen on during screensaver
-            if (help_active) DrawHelpScreen();
-            else ScreensaverView();
-        }
+        if (OC::CORE::ticks - last_view_tick < HEMISPHERE_SCREEN_BLANK_TICKS) ScreensaverView();
     }
 
     /* Help Screen Toggle */
