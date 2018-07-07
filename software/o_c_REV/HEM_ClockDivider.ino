@@ -110,7 +110,7 @@ protected:
         help[HEMISPHERE_HELP_DIGITALS] = "1=Clock";
         help[HEMISPHERE_HELP_CVS] = "";
         help[HEMISPHERE_HELP_OUTS] = "Clk A=Ch1 B=Ch2";
-        help[HEMISPHERE_HELP_ENCODER] = "T=Set div P=Sel Ch";
+        help[HEMISPHERE_HELP_ENCODER] = "Div,Mult";
     }
 
 private:

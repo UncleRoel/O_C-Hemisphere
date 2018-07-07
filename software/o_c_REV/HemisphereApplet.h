@@ -319,8 +319,7 @@ protected:
      *              HEMISPHERE_MAX_CV   max_pixels
      */
     int ProportionCV(int cv_value, int max_pixels) {
-        int prop = Proportion(cv_value, HEMISPHERE_MAX_CV, max_pixels);
-        if (prop < 0) prop = 0; // Zeroing because this is a display-specific method
+        int prop = constrain(Proportion(cv_value, HEMISPHERE_MAX_CV, max_pixels), 0, max_pixels);
         return prop;
     }
 

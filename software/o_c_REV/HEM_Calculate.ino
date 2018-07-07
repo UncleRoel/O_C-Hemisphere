@@ -80,7 +80,7 @@ protected:
         help[HEMISPHERE_HELP_DIGITALS] = "";
         help[HEMISPHERE_HELP_CVS] = "1=CV1 2=CV2";
         help[HEMISPHERE_HELP_OUTS] = "A=Result1 B=Res2";
-        help[HEMISPHERE_HELP_ENCODER] = "T=Set Op P=Sel Ch";
+        help[HEMISPHERE_HELP_ENCODER] = "Operation";
     }
     
 private:
