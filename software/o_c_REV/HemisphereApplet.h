@@ -283,7 +283,7 @@ public:
     int ViewIn(int ch) {return inputs[ch];}
     int ViewOut(int ch) {return outputs[ch];}
     int TicksSinceClock(int ch) {return OC::CORE::ticks - last_clock[ch];} // in ticks
-    int TimeSinceClock(int ch) {return TicksSinceClock(ch) / 167;} // in approx. ms
+    int TimeSinceClock(int ch) {return TicksSinceClock(ch) / 17;} // in approx. ms
 
 protected:
     const char* help[4];
