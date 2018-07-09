@@ -1,11 +1,10 @@
 // Arithmetic functions and typedef to function pointer
-#define HEMISPHERE_NUMBER_OF_CALC 6
+#define HEMISPHERE_NUMBER_OF_CALC 7
 int hem_MIN(int v1, int v2) {return (v1 < v2) ? v1 : v2;}
 int hem_MAX(int v1, int v2) {return (v1 > v2) ? v1 : v2;}
 int hem_SUM(int v1, int v2) {return constrain(v1 + v2, 0, HEMISPHERE_MAX_CV);}
 int hem_DIFF(int v1, int v2) {return hem_MAX(v1, v2) - hem_MIN(v1, v2);}
 int hem_MEAN(int v1, int v2) {return (v1 + v2) / 2;}
-int hem_RAND(int v1, int v2) {return random(hem_MIN(v1, v2), hem_MAX(v1, v2));}
 typedef int(*CalcFunction)(int, int);
 
 class Calculate : public HemisphereApplet {
@@ -19,8 +18,9 @@ public:
         selected = 0;
         operation[0] = 0;
         operation[1] = 1;
-        const char * op_name_list[] = {"Min", "Max", "Sum", "Diff", "Mean", "Rand"};
-        CalcFunction calc_fn_list[] = {hem_MIN, hem_MAX, hem_SUM, hem_DIFF, hem_MEAN, hem_RAND};
+        const char * op_name_list[] = {"Min", "Max", "Sum", "Diff", "Mean", "Rand", "S&H"};
+        // Pointer to hem_MIN() goes in the Rand and S&H slots, because those are handled in Controller()
+        CalcFunction calc_fn_list[] = {hem_MIN, hem_MAX, hem_SUM, hem_DIFF, hem_MEAN, hem_MIN, hem_MIN};
         for(int i = 0; i < HEMISPHERE_NUMBER_OF_CALC; i++)
         {
             op_name[i] = op_name_list[i];
@@ -35,8 +35,15 @@ public:
         ForEachChannel(ch)
         {
             int idx = operation[ch];
-            int result = calc_fn[idx](v1, v2);
-            Out(ch, result);
+
+            if (idx == 6) { // S&H
+               if (Clock(ch)) Out(ch, In(ch));
+            } else if (idx == 5) { // Rand
+                Out(ch, random(0, HEMISPHERE_MAX_CV));
+            } else {
+                int result = calc_fn[idx](v1, v2);
+                Out(ch, result);
+            }
         }
     }
 
@@ -77,7 +84,7 @@ public:
 protected:
     /* Set help text. Each help section can have up to 18 characters. Be concise! */
     void SetHelp() {
-        help[HEMISPHERE_HELP_DIGITALS] = "";
+        help[HEMISPHERE_HELP_DIGITALS] = "Hold 1=CV1 2=CV2";
         help[HEMISPHERE_HELP_CVS] = "1=CV1 2=CV2";
         help[HEMISPHERE_HELP_OUTS] = "A=Result1 B=Res2";
         help[HEMISPHERE_HELP_ENCODER] = "Operation";
@@ -86,6 +93,7 @@ protected:
 private:
     const char* op_name[HEMISPHERE_NUMBER_OF_CALC];
     CalcFunction calc_fn[HEMISPHERE_NUMBER_OF_CALC];
+    int hold[2];
     int operation[2];
     int selected;
     

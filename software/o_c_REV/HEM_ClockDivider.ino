@@ -1,10 +1,3 @@
-// Clock Divider:
-//     Digital 1: Clock Source
-//     Output 1: Clock Output 1
-//     Output 2: Clock Output 2
-//     Encoder: Set division between 1/8 and 8/1
-//     Encoder Push: Toggle encoder function between Clock Output 1 and 2
-
 #define HEM_CLOCKDIV_MAX 8
 
 class ClockDivider : public HemisphereApplet {
@@ -20,7 +13,6 @@ public:
             div[ch] = ch + 1;
             count[ch] = 0;
             next_clock[ch] = 0;
-
         }
         last_clock = OC::CORE::ticks;
         cycle_time = 0;
@@ -29,6 +21,16 @@ public:
 
     void Controller() {
         int this_tick = OC::CORE::ticks;
+
+        // Set division via CV
+        ForEachChannel(ch)
+        {
+            if (DetentedIn(ch)) {
+                div[ch] = Proportion(In(ch), HEMISPHERE_MAX_CV / 2, 8);
+                div[ch] = constrain(div[ch], -8, 8);
+                if (div[ch] == 0 || div[ch] == -1) div[ch] = 1;
+            }
+        }
 
         if (Clock(0)) {
             // The input was clocked; set timing info
@@ -42,14 +44,12 @@ public:
                     if (count[ch] == div[ch]) {
                         count[ch] = 0; // Reset
                         ClockOut(ch);
-                        clock_out_tick[ch] = this_tick;
                     }
                 } else {
                     // Calculate next clock for multiplication on each clock
                     int clock_every = (cycle_time / -div[ch]);
                     next_clock[ch] = this_tick + clock_every;
                     ClockOut(ch); // Sync
-                    clock_out_tick[ch] = this_tick;
                 }
             }
 
@@ -64,7 +64,6 @@ public:
                     int clock_every = (cycle_time / -div[ch]);
                     next_clock[ch] += clock_every;
                     ClockOut(ch);
-                    clock_out_tick[ch] = this_tick;
                 }
             }
         }
@@ -108,7 +107,7 @@ public:
 protected:
     void SetHelp() {
         help[HEMISPHERE_HELP_DIGITALS] = "1=Clock";
-        help[HEMISPHERE_HELP_CVS] = "";
+        help[HEMISPHERE_HELP_CVS] = "Div/Mult Ch1,Ch2";
         help[HEMISPHERE_HELP_OUTS] = "Clk A=Ch1 B=Ch2";
         help[HEMISPHERE_HELP_ENCODER] = "Div,Mult";
     }
@@ -120,7 +119,6 @@ private:
     int last_clock; // The tick number of the last received clock
     int selected; // Which output is currently being edited
     int cycle_time; // Cycle time between the last two clock inputs
-    int clock_out_tick[2]; // Tick number of the most recent clock out on each channel
 
     void DrawSelector() {
         ForEachChannel(ch)
