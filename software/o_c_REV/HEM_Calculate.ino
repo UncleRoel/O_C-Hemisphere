@@ -16,11 +16,14 @@ public:
 
     void Start() {
         selected = 0;
-        operation[0] = 0;
-        operation[1] = 1;
-        const char * op_name_list[] = {"Min", "Max", "Sum", "Diff", "Mean", "Rand", "S&H"};
-        // Pointer to hem_MIN() goes in the Rand and S&H slots, because those are handled in Controller()
-        CalcFunction calc_fn_list[] = {hem_MIN, hem_MAX, hem_SUM, hem_DIFF, hem_MEAN, hem_MIN, hem_MIN};
+        ForEachChannel(ch)
+        {
+            operation[ch] = 0;
+            rand_clocked[ch] = 0;
+        }
+        const char * op_name_list[] = {"Min", "Max", "Sum", "Diff", "Mean", "S&H", "Rnd"};
+        // 0 goes in the Rand and S&H slots, because those are handled in Controller()
+        CalcFunction calc_fn_list[] = {hem_MIN, hem_MAX, hem_SUM, hem_DIFF, hem_MEAN, 0, 0};
         for(int i = 0; i < HEMISPHERE_NUMBER_OF_CALC; i++)
         {
             op_name[i] = op_name_list[i];
@@ -36,10 +39,17 @@ public:
         {
             int idx = operation[ch];
 
-            if (idx == 6) { // S&H
-               if (Clock(ch)) Out(ch, In(ch));
-            } else if (idx == 5) { // Rand
-                Out(ch, random(0, HEMISPHERE_MAX_CV));
+            if (idx == 5) { // S&H
+                if (Clock(ch)) Out(ch, In(ch));
+            } else if (idx == 6) { // Rand
+                // The first time a clock comes in, Rand becomes clocked, freezing a random
+                // value with each clock pulse. Otherwise, Rand is unclocked, and outputs
+                // a random value with each tick.
+                if (Clock(ch)) {
+                    Out(ch, random(0, HEMISPHERE_MAX_CV));
+                    rand_clocked[ch] = 1;
+                }
+                else if (!rand_clocked[ch]) Out(ch, random(0, HEMISPHERE_MAX_CV));
             } else {
                 int result = calc_fn[idx](v1, v2);
                 Out(ch, result);
@@ -67,6 +77,7 @@ public:
         operation[selected] += direction;
         if (operation[selected] == HEMISPHERE_NUMBER_OF_CALC) operation[selected] = 0;
         if (operation[selected] < 0) operation[selected] = HEMISPHERE_NUMBER_OF_CALC - 1;
+        rand_clocked[selected] = 0;
     }
 
     uint32_t OnDataRequest() {
@@ -96,13 +107,19 @@ private:
     int hold[2];
     int operation[2];
     int selected;
+    bool rand_clocked[2];
+    const uint8_t clock[8] = {0x9c, 0xa2, 0xc1, 0xcf, 0xc9, 0xa2, 0x9c, 0x00};
     
     void DrawSelector()
     {
         ForEachChannel(ch)
         {
-            gfxPrint(0 + (31 * ch), 15, op_name[operation[ch]]);
+            gfxPrint(31 * ch, 15, op_name[operation[ch]]);
             if (ch == selected) gfxCursor(0 + (31 * ch), 23, 30);
+
+            // Show the icon if this random calculator is clocked
+            if (operation[ch] == 6 && rand_clocked[ch])
+                gfxBitmap(24 + (31 * ch), 15, 8, clock);
         }
     }
 };
