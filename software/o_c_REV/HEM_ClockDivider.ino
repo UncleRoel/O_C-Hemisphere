@@ -41,7 +41,7 @@ public:
             {
                 count[ch]++;
                 if (div[ch] > 0) { // Positive value indicates clock division
-                    if (count[ch] == div[ch]) {
+                    if (count[ch] >= div[ch]) {
                         count[ch] = 0; // Reset
                         ClockOut(ch);
                     }
@@ -60,7 +60,7 @@ public:
         ForEachChannel(ch)
         {
             if (div[ch] < 0) { // Negative value indicates clock multiplication
-                if (this_tick == next_clock[ch]) {
+                if (this_tick >= next_clock[ch]) {
                     int clock_every = (cycle_time / -div[ch]);
                     next_clock[ch] += clock_every;
                     ClockOut(ch);
