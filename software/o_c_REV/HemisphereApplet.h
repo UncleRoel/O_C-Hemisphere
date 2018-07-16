@@ -41,7 +41,7 @@ public:
 
     void BaseStart(int h) {
         hemisphere = h;
-        gfx_offset = h * 65;
+        gfx_offset = h * 64;
         io_offset = h * 2;
         screensaver_on = 0;
 
@@ -51,7 +51,6 @@ public:
             clock_countdown[ch]  = 0;
             inputs[ch] = 0;
             outputs[ch] = 0;
-
         }
         help_active = 0;
         cursor_countdown = HEMISPHERE_CURSOR_TICKS;
@@ -77,9 +76,8 @@ public:
             }
         }
 
-        // Cursor countdowns. See CursorBlink(), ResetCursor(), gfxCursor(), LineSegmentCursor()
+        // Cursor countdowns. See CursorBlink(), ResetCursor(), gfxCursor()
         if (--cursor_countdown < -HEMISPHERE_CURSOR_TICKS) cursor_countdown = HEMISPHERE_CURSOR_TICKS;
-        if (--ls_cursor_countdown < -16) ls_cursor_countdown = 8;
 
         Controller();
     }
@@ -108,11 +106,6 @@ public:
     /* Check cursor blink cycle. Suppress cursor when screensaver is on */
     bool CursorBlink() {
         return (cursor_countdown > 0 && !screensaver_on);
-    }
-
-    /* Show the normal line segment when screensaver is on */
-    bool LineSegmentCursor() {
-        return (ls_cursor_countdown > 0 || screensaver_on);
     }
 
     void ResetCursor() {
@@ -188,6 +181,14 @@ public:
 
     void gfxLine(int x, int y, int x2, int y2) {
         graphics.drawLine(x + gfx_offset, y, x2 + gfx_offset, y2);
+    }
+
+    void gfxLine(int x, int y, int x2, int y2, bool dotted) {
+        graphics.drawLine(x + gfx_offset, y, x2 + gfx_offset, y2, dotted ? 2 : 1);
+    }
+
+    void gfxDottedLine(int x, int y, int x2, int y2, uint8_t p) {
+        graphics.drawLine(x + gfx_offset, y, x2 + gfx_offset, y2, p);
     }
 
     void gfxCircle(int x, int y, int r) {
@@ -289,6 +290,7 @@ public:
     int TimeSinceClock(int ch) {return TicksSinceClock(ch) / 17;} // in approx. ms
 
 protected:
+    int hemisphere; // Which hemisphere (0, 1) this applet uses
     const char* help[4];
     virtual void SetHelp();
     bool screensaver_on; // Is the screensaver active?
@@ -340,7 +342,6 @@ protected:
 
 
 private:
-    int hemisphere; // Which hemisphere (0, 1) this applet uses
     int gfx_offset; // Graphics offset, based on the side
     int io_offset; // Input/Output offset, based on the side
     int inputs[2];
@@ -348,7 +349,6 @@ private:
     int last_clock[2]; // Tick number of the last clock observed by the child class
     int clock_countdown[2];
     int cursor_countdown;
-    int ls_cursor_countdown; // Cursor for line segment drawing
     bool master_clock_bus; // Clock forwarding was on during the last ISR cycle
     bool applet_started; // Allow the app to maintain state during switching
     int last_view_tick; // Tick number of the most recent view

@@ -65,7 +65,7 @@ public:
 
     void OnEncoderMove(int direction) {
         if (cursor == 1) p = constrain(p += direction, 0, 100);
-        else length = constrain(length += direction, 1, 16);
+        else length = constrain(length += direction, 2, 16);
     }
         
     uint32_t OnDataRequest() {
