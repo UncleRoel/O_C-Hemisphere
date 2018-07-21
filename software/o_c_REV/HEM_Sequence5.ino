@@ -17,14 +17,16 @@ public:
 
     void Controller() {
         // Reset sequencer
-        if (Clock(1)) step = 0;
+        if (Clock(1)) {
+            step = 0;
+            ClockOut(1);
+        }
 
         if (Clock(0)) {
+            Out(0, quantizer.Lookup(note[step] + 48));
             Advance(step);
             if (step == 0) ClockOut(1);
         }
-
-        Out(0, quantizer.Lookup(note[step] + 48));
     }
 
     void View() {
