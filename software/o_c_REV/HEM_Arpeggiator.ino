@@ -21,7 +21,8 @@
 #define HEM_ARP_CLKCV_LOW 0
 #define HEM_ARP_CLKCV_HIGH 7 
 #define HEM_ARP_RANGE_LOW 2 
-#define HEM_ARP_RANGE_HIGH 33 
+//#define HEM_ARP_RANGE_HIGH 33 // SAVING FIX! 
+#define HEM_ARP_RANGE_HIGH 17 
 #define HEM_ARP_ORDER_HIGH 3 
 #define HEM_ARP_DRAW_CLK_CYCLES 40 
 
@@ -117,7 +118,7 @@ const hem_arp_chord Arp_Chords[] = {
 };
 
 
-const int hem_arp_cvmods[8] = {1,2,4,8,16,24,32,64};
+const int hem_arp_cvmods[8] = {0,2,4,8,16,24,32,64};
 const char* hem_arp_order_names[] = {"up     ","down   ","updown ","random "};
 // Presets for clock division
 const int hem_arp_divisions[32] = { /*All multiplications end up -2, so 0 means 1/2 Mult*/ -14, -13,-12,-11, -10,-9,-8,-7, -6, -5,-4,-3, -2,-1,0,/*div*/1,2,3,4, 5,6,7,8, 9,10,11,12, 13,14,15,16,32};
@@ -240,8 +241,10 @@ public:
 
         
         // output note
-        Out(0, constrain((In(0)+quantizer.Lookup(current_note + 48)), 0, HEMISPHERE_MAX_CV));
-        //Out(0, (In(0)+quantizer.Lookup(current_note + 48)));
+        int32_t outputter = In(0)+quantizer.Lookup(current_note + 48);
+        // Not really sure how to constrain here and if needed.
+        //Out(0, constrain(outputter, -HEMISPHERE_MAX_CV, HEMISPHERE_MAX_CV));
+        Out(0, outputter);
         
     }
 	/* Draw the screen */
@@ -311,9 +314,13 @@ public:
         Pack(data, PackLocation {0,11}, bpm-1 );
         Pack(data, PackLocation {11,3}, clk_cv_range);
         Pack(data, PackLocation {14,5}, divider+15 );
-        Pack(data, PackLocation {19,5}, arp_range-2);
-        Pack(data, PackLocation {24,6}, selected_chord );
-        Pack(data, PackLocation {30,2}, arp_order );
+        //SAVING FIX
+        //Pack(data, PackLocation {19,5}, arp_range-2);
+        //Pack(data, PackLocation {24,6}, selected_chord );
+        //Pack(data, PackLocation {30,2}, arp_order );
+        Pack(data, PackLocation {19,4}, arp_range-2);
+        Pack(data, PackLocation {23,6}, selected_chord );
+        Pack(data, PackLocation {29,2}, arp_order );
         // example: pack property_name at bit 0, with size of 8 bits
         // Pack(data, PackLocation {0,8}, property_name); 
         return data;
@@ -330,9 +337,13 @@ public:
         bpm = Unpack(data, PackLocation {0,11}) + 1 ;
         clk_cv_range = Unpack(data, PackLocation {11,3}) ;
         divider = Unpack(data, PackLocation {14,5})-15;
-        arp_range = Unpack(data, PackLocation {19,5}) +2;
-        selected_chord = Unpack(data, PackLocation {24,6}) ;
-        arp_order = Unpack(data, PackLocation {30,2}) ;
+        //SAVING FIX
+        //arp_range = Unpack(data, PackLocation {19,5}) +2;
+        //selected_chord = Unpack(data, PackLocation {24,6}) ;
+        //arp_order = Unpack(data, PackLocation {30,2}) ;
+        arp_range = Unpack(data, PackLocation {19,4}) +2;
+        selected_chord = Unpack(data, PackLocation {23,6}) ;
+        arp_order = Unpack(data, PackLocation {29,2}) ;
     }
 
 protected:
@@ -441,7 +452,7 @@ private:
     }
     void GetNote() {
       // Find the chord tone + add octaves if there more notes! 
-      int octaves = (note_nr_in_arp / Arp_Chords[selected_chord].nr_notes) *12 *Arp_Chords[selected_chord].octave_span;
+      int octaves = (note_nr_in_arp / Arp_Chords[selected_chord].nr_notes) *12 * Arp_Chords[selected_chord].octave_span;
       current_note = Arp_Chords[selected_chord].chord_tones[(note_nr_in_arp % Arp_Chords[selected_chord].nr_notes)] + octaves;
     }     
 };
